@@ -1,12 +1,35 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectUser, logout } from '../../store/authSlice';
+import firebaseService from '../../services/firebaseServices';
 
 const Header = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const user = useSelector(selectUser);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+  
+      await firebaseService.signOut();
+  
+      dispatch(logout());
+      setIsMobileMenuOpen(false);
+      
+      // Redirect to home page after logout
+      navigate('/');
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -26,11 +49,31 @@ const Header = () => {
           {/* Desktop buttons */}
           <div className="hidden md:flex items-center space-x-4">
             
-            <NavLink to={'/login'}>
-              <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer">
-                Login
-              </button>
-            </NavLink>
+            {user ? (
+              // Show user info and logout when logged in
+              <div className="flex items-center space-x-4">
+                
+                <span className="text-gray-300">
+                  Welcome, {user.displayName || user.email}
+                </span>
+
+                <button 
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition 
+                  duration-300 cursor-pointer">
+                  Logout
+                </button>
+              
+              </div>
+
+            ) : (
+              // Show login when not logged in
+              <NavLink to={'/login'}>
+                <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer">
+                  Login
+                </button>
+              </NavLink>
+            )}
 
           </div>
 
@@ -52,13 +95,29 @@ const Header = () => {
             
             <div className="flex flex-col space-y-3 pt-2 border-t border-gray-700">
 
-              <NavLink to={'/login'}>
-                <button 
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg 
-                  transition duration-300 cursor-pointer w-full">
-                  Login
-                </button>
-              </NavLink>
+              {user ? (
+                // Mobile: Show user info and logout when logged in
+                <>
+                  <div className="px-4 py-2 text-gray-300 border-b border-gray-700">
+                    Welcome, {user.displayName || user.email}
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer w-full text-left"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                // Mobile: Show login when not logged in
+                <NavLink to={'/login'} onClick={() => setIsMobileMenuOpen(false)}>
+                  <button 
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer w-full text-left"
+                  >
+                    Login
+                  </button>
+                </NavLink>
+              )}
             
             </div>
           
