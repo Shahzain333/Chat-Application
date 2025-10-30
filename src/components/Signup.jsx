@@ -5,6 +5,10 @@ import { login, setLoading, setError, clearError, selectUser, selectLoading,
     selectError } from '../store/authSlice'
 import DashboardPage from '../pages/Dashboard/DashboardPage'
 import firebaseService from '../services/firebaseServices'
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 
 function Signup() {
     
@@ -12,8 +16,10 @@ function Signup() {
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        terms: false
     })
+    const [openSnackbar, setOpenSnackbar] = useState(false)
 
     const user = useSelector(selectUser)
     const loading = useSelector(selectLoading)
@@ -22,48 +28,106 @@ function Signup() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-
     const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: type === 'checkbox' ? checked : value
         })
-        dispatch(clearError())
+
+        if (error) {
+            dispatch(clearError())
+        }
+        
+    }
+
+    const showSnackbar = () => {
+        setOpenSnackbar(true);
+    };
+
+    const handleCloseSnackbar = (reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpenSnackbar(false);
+        dispatch(clearError());
+    };
+
+    const getAuthErrorMessage = (error) => {
+        switch(error.code){
+            // Signup Errors
+            case 'auth/email-already-in-use':
+                return 'Email already exists. Please try another email.';
+            case 'auth/invalid-email':
+                return 'Invalid email address format.';
+            case 'auth/operation-not-allowed':
+                return 'Sign-up is temporarily disabled. Please try again later.';
+            case 'auth/weak-password':
+                return 'Password is too weak. Please use a stronger password.';
+            
+            // Security Errors
+            case 'auth/too-many-requests':
+                return 'Too many failed attempts. Please try again later.';
+            case 'auth/network-request-failed':
+                return 'Network error. Please check your connection.';
+            
+            // System Errors
+            case 'auth/internal-error':
+                return 'Service temporarily unavailable. Please try again.';
+            case 'auth/service-unavailable':
+                return 'Authentication service is down. Please try again later.';
+            
+            // Default
+            default:
+                return `${error.message || 'Failed to create account. Please try again.'}`;
+        }
     }
 
     const handleSubmit = async (e) => {
-        
         e.preventDefault()
 
         dispatch(setLoading(true))
         dispatch(clearError())
 
         // Validation
+        if (!formData.terms) {
+            dispatch(setError('Please accept the terms and conditions'))
+            showSnackbar()
+            dispatch(setLoading(false))
+            return
+        }
+
         if (formData.password !== formData.confirmPassword) {
             dispatch(setError('Passwords do not match!'))
+            showSnackbar()
+            dispatch(setLoading(false))
             return
         }
 
         if (formData.password.length < 6) {
             dispatch(setError('Password should be at least 6 characters'))
+            showSnackbar()
+            dispatch(setLoading(false))
             return
         }
 
         try {
-
             const userCredential = await firebaseService.signUp(formData.email, formData.password)
             
             dispatch(login({
                 uid: userCredential.user.uid,
                 email: userCredential.user.email,
                 displayName: formData.username || userCredential.user.email,
-                photoURL: userCredential.user.photoURL || ""
             }))
             
             navigate('/dashboard')
             
         } catch (error) {
-            dispatch(setError(error.message || 'Failed to create account'))
+            const errorMessage = getAuthErrorMessage(error)
+            dispatch(setError(errorMessage))
+            showSnackbar()
+        } finally {
+            dispatch(setLoading(false))
         }
     }
 
@@ -73,6 +137,31 @@ function Signup() {
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-100 
                 flex items-center justify-center px-4 py-4">
                     
+                    {/* Snackbar for All Errors */}
+                    <Snackbar 
+                        open={openSnackbar} 
+                        autoHideDuration={6000} 
+                        onClose={handleCloseSnackbar}
+                        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                    >
+                        <Alert 
+                            severity="error"
+                            action={
+                                <IconButton
+                                    aria-label="close"
+                                    color="inherit"
+                                    size="small"
+                                    onClick={handleCloseSnackbar}
+                                >
+                                    <CloseIcon fontSize="inherit" />
+                                </IconButton>
+                            }
+                            sx={{ width: '100%' }}
+                        >
+                            {error}
+                        </Alert>
+                    </Snackbar>
+                    
                     <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
                         
                         {/* Header */}
@@ -81,13 +170,6 @@ function Signup() {
                                 Create your account
                             </h1>
                         </div>
-
-                        {/* Error Message */}
-                        {error && (
-                            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                                {error}
-                            </div>
-                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                         
@@ -173,7 +255,10 @@ function Signup() {
                                     id="terms"
                                     name="terms"
                                     type="checkbox"
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 
+                                    checked={formData.terms}
+                                    onChange={handleChange}
+                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 
+                                    border-gray-300 
                                     rounded"
                                     required
                                 />
@@ -188,7 +273,8 @@ function Signup() {
                             {/* Submit Button */}
                             <button 
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || !formData.terms || !formData.email || 
+                                    !formData.password || !formData.confirmPassword}
                                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white 
                                 font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed"
                             >
@@ -201,17 +287,20 @@ function Signup() {
                         <div className="text-center mt-6">
                             <p className="text-gray-600">
                                 Already have an account?{' '}
-                                <NavLink to="/login" className="text-blue-600 hover:text-blue-500 font-semibold transition-colors">
+                                <NavLink to="/login" className="text-blue-600 hover:text-blue-500 
+                                font-semibold transition-colors">
                                     Sign in
                                 </NavLink>
                             </p>
                         </div>
 
                     </div>
+
                 </div>
+
             )}
+
         </div>
-        
     )
 }
 

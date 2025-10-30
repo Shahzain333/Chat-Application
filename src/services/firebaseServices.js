@@ -34,7 +34,7 @@ class FirebaseService {
             const userCredential = await createUserWithEmailAndPassword(this.firebaseAuth, email, password);
             return userCredential;
         } catch (error) {
-            console.error("Signup error:", error);
+            console.error("Signup FirebaseService error:", error);
             throw error;
         }
     }
@@ -43,7 +43,7 @@ class FirebaseService {
         try {
             return await signInWithEmailAndPassword(this.firebaseAuth, email, password);
         } catch (error) {
-            console.error("Signin error:", error);
+            console.error("Signin FirebaseService error:", error);
             throw error;
         }
     }
@@ -61,11 +61,7 @@ class FirebaseService {
     async signinWithGithub() {
         return await signInWithPopup(this.firebaseAuth, this.githubProvider);
     }
-
-    // getCurrentUser() {
-    //     return this.firebaseAuth.currentUser;
-    // }
-
+    
     onAuthStateChange(callback) {
         return onAuthStateChanged(this.firebaseAuth, callback);
     }
