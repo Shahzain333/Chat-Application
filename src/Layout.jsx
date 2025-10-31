@@ -5,9 +5,9 @@ import Header from './components/header/Header'
 function Layout() {
 
   return (
-    <div>
-        <Header />
-        <Outlet />
+    <div className="app-background">
+      <Header />
+      <Outlet /> {/* or your router component */}
     </div>
   )
 }

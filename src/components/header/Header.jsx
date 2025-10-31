@@ -5,7 +5,6 @@ import { selectUser, logout } from '../../store/authSlice';
 import firebaseService from '../../services/firebaseServices';
 
 const Header = () => {
-
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const user = useSelector(selectUser);
@@ -18,115 +17,95 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-  
       await firebaseService.signOut();
-  
       dispatch(logout());
       setIsMobileMenuOpen(false);
-      
-      // Redirect to home page after logout
       navigate('/');
-      
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
   return (
-    <header className="bg-gray-900 text-white">
+    <header className="sticky top-0 z-50 bg-transparent">
       
       <div className="container mx-auto px-4 py-4">
-
-        {/* Main header content */}
         <div className="flex justify-between items-center">
-      
-          <div className="flex items-center space-x-8">
-            <NavLink to={'/'}>
-              <div className="text-2xl font-bold">Chat App</div>
-            </NavLink>
-          </div>
+          {
+            user ? (
+              <NavLink to={'/dashboard'}>
+                <div className="text-2xl font-bold text-green-600">Chat App</div>
+              </NavLink>
+            ) : (
+              <NavLink to={'/'}>
+                <div className="text-2xl font-bold text-green-600">Chat App</div>
+              </NavLink>
+            )
+          }
+          
 
-          {/* Desktop buttons */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            
             {user ? (
-              // Show user info and logout when logged in
               <div className="flex items-center space-x-4">
-                
-                <span className="text-gray-300">
+                <span className="text-green-700">
                   Welcome, {user.displayName || user.email}
                 </span>
-
                 <button 
                   onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition 
-                  duration-300 cursor-pointer">
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg 
+                  transition duration-300 cursor-pointer font-semibold"
+                >
                   Logout
                 </button>
-              
               </div>
-
             ) : (
-              // Show login when not logged in
               <NavLink to={'/login'}>
-                <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer">
+                <button className="bg-green-600 hover:bg-green-700 
+                text-white px-4 py-2 rounded-lg transition duration-300 cursor-pointer font-semibold">
                   Login
                 </button>
               </NavLink>
             )}
-
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <button 
-            className="md:hidden text-gray-300 hover:text-white cursor-pointer"
+            className="md:hidden cursor-pointer"
             onClick={toggleMobileMenu}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+              d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
           </button>
-
         </div>
 
-        {/* Mobile menu */}
-        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden mt-4 pb-2 `}>
-          <nav className="flex flex-col space-y-4">
-            
-            <div className="flex flex-col space-y-3 pt-2 border-t border-gray-700">
-
-              {user ? (
-                // Mobile: Show user info and logout when logged in
-                <>
-                  <div className="px-4 py-2 text-gray-300 border-b border-gray-700">
-                    Welcome, {user.displayName || user.email}
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer w-full text-left"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                // Mobile: Show login when not logged in
-                <NavLink to={'/login'} onClick={() => setIsMobileMenuOpen(false)}>
-                  <button 
-                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition duration-300 cursor-pointer w-full text-left"
-                  >
-                    Login
-                  </button>
-                </NavLink>
-              )}
-            
-            </div>
-          
+        {/* Mobile Menu */}
+        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden mt-4`}>
+          <nav className="flex flex-col space-y-3">
+            {user ? (
+              <>
+                <div className="px-2 py-2 text-green-600 border-b border-green-200">
+                  Welcome, {user.displayName || user.email}
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-300 text-left"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <NavLink to={'/login'} onClick={() => setIsMobileMenuOpen(false)}>
+                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-300 w-full text-left">
+                  Login
+                </button>
+              </NavLink>
+            )}
           </nav>
-        
         </div>
-      
       </div>
-    
     </header>
   );
 };

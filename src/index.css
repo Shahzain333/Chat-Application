@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #01aa8529;
+}
+
+/* Apply background to the entire app */
+.app-background {
+    background-image: url("/src/assets/background.png");
+    background-position: center;
+    background-size: cover;
+    background-attachment: fixed; /* This keeps the background fixed */
+    min-height: 100vh;
+    position: relative;
+}
+

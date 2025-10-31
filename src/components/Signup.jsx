@@ -38,24 +38,19 @@ function Signup() {
         if (error) {
             dispatch(clearError())
         }
-        
     }
 
     const showSnackbar = () => {
         setOpenSnackbar(true);
     };
 
-    const handleCloseSnackbar = (reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
+    const handleCloseSnackbar = () => {
         setOpenSnackbar(false);
         dispatch(clearError());
     };
 
     const getAuthErrorMessage = (error) => {
         switch(error.code){
-            // Signup Errors
             case 'auth/email-already-in-use':
                 return 'Email already exists. Please try another email.';
             case 'auth/invalid-email':
@@ -64,20 +59,12 @@ function Signup() {
                 return 'Sign-up is temporarily disabled. Please try again later.';
             case 'auth/weak-password':
                 return 'Password is too weak. Please use a stronger password.';
-            
-            // Security Errors
             case 'auth/too-many-requests':
                 return 'Too many failed attempts. Please try again later.';
             case 'auth/network-request-failed':
                 return 'Network error. Please check your connection.';
-            
-            // System Errors
             case 'auth/internal-error':
                 return 'Service temporarily unavailable. Please try again.';
-            case 'auth/service-unavailable':
-                return 'Authentication service is down. Please try again later.';
-            
-            // Default
             default:
                 return `${error.message || 'Failed to create account. Please try again.'}`;
         }
@@ -89,7 +76,6 @@ function Signup() {
         dispatch(setLoading(true))
         dispatch(clearError())
 
-        // Validation
         if (!formData.terms) {
             dispatch(setError('Please accept the terms and conditions'))
             showSnackbar()
@@ -134,10 +120,8 @@ function Signup() {
     return (
         <div>
             {user ? <DashboardPage/> : (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 
-                flex items-center justify-center px-4 py-4">
+                <div className="flex items-center justify-center px-4 py-2">
                     
-                    {/* Snackbar for All Errors */}
                     <Snackbar 
                         open={openSnackbar} 
                         autoHideDuration={6000} 
@@ -147,33 +131,25 @@ function Signup() {
                         <Alert 
                             severity="error"
                             action={
-                                <IconButton
-                                    aria-label="close"
-                                    color="inherit"
-                                    size="small"
-                                    onClick={handleCloseSnackbar}
-                                >
+                                <IconButton onClick={handleCloseSnackbar}>
                                     <CloseIcon fontSize="inherit" />
                                 </IconButton>
                             }
-                            sx={{ width: '100%' }}
                         >
                             {error}
                         </Alert>
                     </Snackbar>
                     
-                    <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
+                    <div className="max-w-md w-full bg-green-200 rounded-2xl shadow-lg p-8">
                         
-                        {/* Header */}
                         <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                            <h1 className="text-3xl font-bold text-green-800 mb-2">
                                 Create your account
                             </h1>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                         
-                            {/* Username Field */}
                             <div>
                                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                                     Username
@@ -185,13 +161,10 @@ function Signup() {
                                     placeholder="Enter username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all 
-                                    duration-200 outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                                 />
                             </div>
 
-                            {/* Email Field */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                     Email Address *
@@ -203,14 +176,11 @@ function Signup() {
                                     placeholder="Enter email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all 
-                                    duration-200 outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                                     required
                                 />
                             </div>
                             
-                            {/* Password Field */}
                             <div>
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                     Password *
@@ -222,15 +192,12 @@ function Signup() {
                                     placeholder="Create a password (min. 6 characters)"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                                    transition-all duration-200 outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                                     required
                                     minLength={6}
                                 />
                             </div>
 
-                            {/* Confirm Password Field */}
                             <div>
                                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                                     Confirm Password *
@@ -242,14 +209,11 @@ function Signup() {
                                     placeholder="Confirm your password"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                                    transition-all duration-200 outline-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
                                     required
                                 />
                             </div>
                             
-                            {/* Terms and Conditions */}
                             <div className="flex items-center">
                                 <input 
                                     id="terms"
@@ -257,38 +221,39 @@ function Signup() {
                                     type="checkbox"
                                     checked={formData.terms}
                                     onChange={handleChange}
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 
-                                    border-gray-300 
-                                    rounded"
+                                    className="h-4 w-4 text-green-600 focus:ring-green-500 
+                                    border-green-300 rounded cursor-pointer"
                                     required
                                 />
                                 <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
                                     I agree to the{' '}
-                                    <Link to="#" className="text-blue-600 hover:text-blue-500 font-medium">
+                                    <Link to="#" className="text-green-600 hover:text-green-500 
+                                    font-medium">
                                         Terms and Conditions
                                     </Link>
                                 </label>
                             </div>
 
-                            {/* Submit Button */}
                             <button 
                                 type="submit"
                                 disabled={loading || !formData.terms || !formData.email || 
                                     !formData.password || !formData.confirmPassword}
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white 
-                                font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed"
+                                className="w-full bg-green-600 hover:bg-green-700 
+                                disabled:bg-green-400 text-white font-semibold py-3 px-4 
+                                rounded-lg transition-all duration-200 hover:scale-[1.02] 
+                                focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+                                disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {loading ? 'Creating Account...' : 'Create Account'}
                             </button>
 
                         </form>
 
-                        {/* Login Link */}
                         <div className="text-center mt-6">
                             <p className="text-gray-600">
                                 Already have an account?{' '}
-                                <NavLink to="/login" className="text-blue-600 hover:text-blue-500 
-                                font-semibold transition-colors">
+                                <NavLink to="/login" className="text-green-600 hover:text-green-500 
+                                font-semibold cursor-pointer">
                                     Sign in
                                 </NavLink>
                             </p>

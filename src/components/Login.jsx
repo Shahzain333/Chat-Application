@@ -15,8 +15,6 @@ function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [openSnackbar, setOpenSnackbar] = useState(false)
-    const [isEmailError, setIsEmailError] = useState(false)
-    const [isPasswordError, setIsPasswordError] = useState(false)
 
     const user = useSelector(selectUser)
     const loading = useSelector(selectLoading)
@@ -24,117 +22,48 @@ function Login() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    // Comprehensive Email validation regex 
     const validateEmail = (email) => {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         return emailRegex.test(email)
     }
 
     const handleEmailChange = (e) => {
-        const value = e.target.value;
-        setEmail(value)
-        
-        // Clear errors when user starts typing
-        if(error) {
-            dispatch(clearError())
-            setIsEmailError(false)
-            setIsPasswordError(false)
-        }
+        setEmail(e.target.value)
+        if(error) dispatch(clearError())
     }
 
     const handlePasswordChange = (e) => {
-        const value = e.target.value;
-        setPassword(value)
-        
-        // Clear errors when user starts typing
-        if(error) {
-            dispatch(clearError())
-            setIsEmailError(false)
-            setIsPasswordError(false)
-        }
+        setPassword(e.target.value)
+        if(error) dispatch(clearError())
     }
 
-    const showSnackbar = () => {
-        setOpenSnackbar(true);
-    };
-
-    const handleCloseSnackbar = (reason) => {
-        if (reason === 'clickaway') {
-            return;
-        }
+    const handleCloseSnackbar = () => {
         setOpenSnackbar(false);
         dispatch(clearError());
-        setIsEmailError(false)
-        setIsPasswordError(false)
     };
-
-    // Check if error is email-related
-    const isEmailRelatedError = (errorMsg) => {
-        const emailErrors = [
-            'invalid email',
-            'user not found',
-            'email address',
-            'valid email'
-        ];
-        return emailErrors.some(emailError => errorMsg.toLowerCase().includes(emailError));
-    }
-
-    // Check if error is password-related
-    const isPasswordRelatedError = (errorMsg) => {
-        const passwordErrors = [
-            'password',
-            'wrong password',
-            'incorrect password'
-        ];
-        return passwordErrors.some(passwordError => errorMsg.toLowerCase().includes(passwordError));
-    }
 
     const getAuthErrorMessage = (error) => {
         switch(error.code){
-            // Email/Password Errors - These will show below fields
             case 'auth/invalid-email':
-                setIsEmailError(true)
                 return 'Invalid email address format.';
             case 'auth/user-not-found':
-                setIsEmailError(true)
                 return 'No account found with this email address.';
             case 'auth/wrong-password':
-                setIsPasswordError(true)
                 return 'Incorrect password. Please try again.';
             case 'auth/invalid-credential':
-                setIsEmailError(true)
-                setIsPasswordError(true)
-                return 'Invalid email or password. Please check your credentials.';
-            
-            // Security Errors - Show in snackbar
+                return 'Invalid email or password.';
             case 'auth/too-many-requests':
                 return 'Too many failed attempts. Please try again later.';
             case 'auth/network-request-failed':
                 return 'Network error. Please check your connection.';
-            
-            // Social Login Errors - Show in snackbar
             case 'auth/popup-closed-by-user':
                 return 'Login cancelled. Please try again.';
             case 'auth/popup-blocked':
                 return 'Popup was blocked. Please allow popups for this site.';
             case 'auth/account-exists-with-different-credential':
                 return 'Account exists with different sign-in method.';
-            case 'auth/unauthorized-domain':
-                return 'This domain is not authorized for login.';
-            case 'auth/operation-not-allowed':
-                return 'This sign-in method is not enabled.';
-            
-            // System Errors - Show in snackbar
-            case 'auth/internal-error':
-                return 'Service temporarily unavailable. Please try again.';
-            case 'auth/service-unavailable':
-                return 'Authentication service is down. Please try again later.';
-            case 'auth/user-disabled':
-                return 'This account has been disabled.';
-            
-            // Default - Show in snackbar
             default:
-                return `${error.message || 'Login failed. Please try again.'}`;
+                return 'Login failed. Please try again.';
         }
     }
 
@@ -143,21 +72,14 @@ function Login() {
     
         dispatch(setLoading(true))
         dispatch(clearError())
-        setIsEmailError(false)
-        setIsPasswordError(false)
 
-        // Basic validation
         if(!email || !password){
-            if(!email) setIsEmailError(true)
-            if(!password) setIsPasswordError(true)
             dispatch(setError('Please enter both email and password'))
             dispatch(setLoading(false))
             return
         }
 
-        // Email Format Validation
         if(!validateEmail(email)){
-            setIsEmailError(true)
             dispatch(setError('Please enter a valid email address'))
             dispatch(setLoading(false))
             return
@@ -169,12 +91,7 @@ function Login() {
         } catch (error) {
             const errorMessage = getAuthErrorMessage(error)
             dispatch(setError(errorMessage))
-            
-            // Show snackbar only for non-field-specific errors
-            const showInSnackbar = !isEmailError && !isPasswordError;
-            if (showInSnackbar) {
-                showSnackbar()
-            }
+            setOpenSnackbar(true)
         } finally {
             dispatch(setLoading(false))
         }
@@ -183,8 +100,6 @@ function Login() {
     const handleSocialLogin = async (provider) => {
         dispatch(setLoading(true))
         dispatch(clearError())
-        setIsEmailError(false)
-        setIsPasswordError(false)
         
         try {
             if (provider === 'google') {
@@ -192,15 +107,11 @@ function Login() {
             } else if (provider === 'github') {
                 await firebaseService.signinWithGithub()
             }
-            
             navigate('/dashboard')
-            
         } catch (error) {
             const errorMessage = getAuthErrorMessage(error)
             dispatch(setError(errorMessage))
-            
-            // Show snackbar for social login errors (they're always general)
-            showSnackbar()
+            setOpenSnackbar(true)
         } finally {
             dispatch(setLoading(false))
         }
@@ -218,17 +129,14 @@ function Login() {
                 dispatch(logout())
             }
         })
-
         return () => unsubscribe()
     }, [dispatch])
 
     return (
         <div>
             {user ? <DashboardPage/> : (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 
-                    flex items-center justify-center px-4 py-8">
+                <div className="flex items-center justify-center px-4 py-2">
                     
-                    {/* Snackbar for General Errors */}
                     <Snackbar 
                         open={openSnackbar} 
                         autoHideDuration={6000} 
@@ -238,35 +146,28 @@ function Login() {
                         <Alert 
                             severity="error"
                             action={
-                                <IconButton
-                                    aria-label="close"
-                                    color="inherit"
-                                    size="small"
-                                    onClick={handleCloseSnackbar}
-                                >
+                                <IconButton onClick={handleCloseSnackbar}>
                                     <CloseIcon fontSize="inherit" />
                                 </IconButton>
                             }
-                            sx={{ width: '100%' }}
                         >
                             {error}
                         </Alert>
                     </Snackbar>
                         
-                    <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
+                    <div className="max-w-md w-full bg-green-200 rounded-2xl shadow-lg p-8">
                             
-                        {/* Header */}
                         <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                            <h1 className="text-3xl font-bold text-green-800 mb-2">
                                 Sign in to your account
                             </h1>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             
-                            {/* Email Field */}
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="email" className="block text-sm font-medium 
+                                text-gray-700 mb-2">
                                     Email Address
                                 </label>
                                 <input 
@@ -275,75 +176,58 @@ function Login() {
                                     placeholder="Enter your email"
                                     value={email}
                                     onChange={handleEmailChange}
-                                    className={`w-full px-2 py-2 border rounded-lg 
-                                    focus:ring-2 focus:border-blue-500 transition-all 
-                                    duration-200 outline-none ${
-                                        isEmailError && error
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300 focus:ring-blue-500'
-                                    }`}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                                    focus:ring-2 focus:ring-green-500 focus:border-green-500 
+                                    outline-none"
                                     required
                                 />
-                                {/* {isEmailError && error && (
-                                    <p className="mt-1 text-sm text-red-500">{error}</p>
-                                )} */}
                             </div>
 
-                            {/* Password Field */}
                             <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label htmlFor="password" className="block text-sm font-medium 
-                                    text-gray-700">
-                                        Password
-                                    </label>
-                                </div>
+                                <label htmlFor="password" className="block text-sm font-medium 
+                                text-gray-700 mb-2">
+                                    Password
+                                </label>
                                 <input 
                                     id="password"
                                     type="password"
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={handlePasswordChange}
-                                    className={`w-full px-2 py-2 border rounded-lg 
-                                    focus:ring-2 focus:border-blue-500 transition-all 
-                                    duration-200 outline-none ${
-                                        isPasswordError && error
-                                            ? 'border-red-500 focus:ring-red-500' 
-                                            : 'border-gray-300 focus:ring-blue-500'
-                                    }`}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                                    focus:ring-2 focus:ring-green-500 focus:border-green-500 
+                                    outline-none"
                                     required
                                 />
-                                {/* {isPasswordError && error && !isEmailError && (
-                                    <p className="mt-1 text-sm text-red-500">{error}</p>
-                                )} */}
                             </div>
 
-                            {/* Submit Button */}
                             <button 
                                 type="submit"
                                 disabled={loading || !email || !password}
-                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white 
-                                font-semibold py-3 px-4 rounded-lg transition-all duration-200 
-                                transform hover:scale-[1.02] focus:ring-2 focus:ring-blue-500 
-                                focus:ring-offset-2 disabled:cursor-not-allowed"
+                                className="w-full bg-green-600 hover:bg-green-700 
+                                disabled:bg-green-400 text-white font-semibold py-3 px-4 
+                                rounded-lg transition-all duration-200 hover:scale-[1.02] 
+                                focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+                                disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {loading ? 'Signing In...' : 'Sign In'}
                             </button>
 
                         </form>
 
-                        {/* Social Login Buttons */}
-                        <div className="my-4 flex items-center">
-                            <div className="flex-1 border-t border-gray-300"></div>
+                        <div className="my-6 flex items-center">
+                            <div className="flex-1 border-t border-green-300"></div>
                             <span className="px-4 text-gray-500 text-sm">Or continue with</span>
-                            <div className="flex-1 border-t border-gray-300"></div>
+                            <div className="flex-1 border-t border-green-300"></div>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-4">
                             <button 
                                 onClick={() => handleSocialLogin('google')}
                                 disabled={loading}
-                                className="flex items-center justify-center gap-2 border border-gray-300 
-                                rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                                className="flex items-center justify-center gap-2 border 
+                                border-green-300 rounded-lg py-3 px-4 hover:bg-green-300 
+                                transition-colors disabled:opacity-50 cursor-pointer"
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -357,8 +241,9 @@ function Login() {
                             <button 
                                 onClick={() => handleSocialLogin('github')}
                                 disabled={loading}
-                                className="flex items-center justify-center gap-2 border border-gray-300 
-                                rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50"
+                                className="flex items-center justify-center gap-2 border 
+                                border-green-300 rounded-lg py-3 px-4 hover:bg-green-300 
+                                transition-colors disabled:opacity-50 cursor-pointer"
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -367,11 +252,10 @@ function Login() {
                             </button>
                         </div>
 
-                        {/* Sign Up Link */}
                         <div className="text-center mt-6">
                             <p className="text-gray-600">
                                 Don't have an account?{' '}
-                                <NavLink to="/signup" className="text-blue-600 hover:text-blue-500 font-semibold transition-colors">
+                                <NavLink to="/signup" className="text-green-600 hover:text-green-500 font-semibold">
                                     Sign up
                                 </NavLink>
                             </p>
