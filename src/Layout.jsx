@@ -1,12 +1,12 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
-import Header from './components/header/Header'
+import Login from './components/Login'
 
 function Layout() {
 
   return (
     <div className="app-background">
-      <Header />
+      {/* <Login /> */}
       <Outlet /> {/* or your router component */}
     </div>
   )

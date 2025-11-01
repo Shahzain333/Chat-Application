@@ -15,6 +15,7 @@ import DashboardPage from './pages/Dashboard/DashboardPage.jsx'
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path='/' element={<Layout />}>
+      <Route index element={<LoginPage />} /> {/* Default route shows login */}
       <Route path='/login' element={<LoginPage />} />
       <Route path='/signup' element={<SignupPage />} />
       <Route path='/dashboard' element={<DashboardPage />} />
