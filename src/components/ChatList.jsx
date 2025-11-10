@@ -8,7 +8,6 @@ import { setSelectedUser, setChats, setCurrentUser, setLoading, clearChatState }
 import { useSelector, useDispatch } from "react-redux";
 
 const Chatlist = () => {
-
     const dispatch = useDispatch();
     const { chats, selectedUser, currentUser, loading } = useSelector(state => state.chat);
 
@@ -17,7 +16,6 @@ const Chatlist = () => {
         
         let unsubscribeUser = () => {};
         let unsubscribeChats = () => {};
-
 
         const initializeUserAndChats = async () => {
             try {
@@ -34,7 +32,7 @@ const Chatlist = () => {
                 }
 
                 unsubscribeChats = firebaseService.listenForChats((newChats) => {
-                    dispatch(setChats(newChats));
+                    dispatch(setChats(newChats || []));
                 });
 
             } catch (error) {
@@ -70,24 +68,35 @@ const Chatlist = () => {
             }
         });
 
-        return () => unsubscribeAuth();
+        return () => {
+            if (unsubscribeAuth && typeof unsubscribeAuth === 'function') {
+                unsubscribeAuth();
+            }
+        };
     }, [dispatch]);
 
     const sortedChats = useMemo(() => {
-        return [...chats].sort((a,b) => {
-            const aTime = a.lastMessageTimestamp?.seconds || 0;
-            const bTime = b.lastMessageTimestamp?.seconds || 0;
+        if (!chats || !Array.isArray(chats)) return [];
+        
+        return [...chats].sort((a, b) => {
+            const aTime = a.lastMessageTimestamp?.seconds || a.lastMessageTimestamp || 0;
+            const bTime = b.lastMessageTimestamp?.seconds || b.lastMessageTimestamp || 0;
             return bTime - aTime;
         });
     }, [chats]);
 
     const startChat = (user) => {
-        dispatch(setSelectedUser(user));
+        if (user && user.uid) {
+            dispatch(setSelectedUser(user));
+        }
     };
 
     const getOtherUserFromChat = (chat) => {
+        if (!chat?.users || !Array.isArray(chat.users)) return null;
+        
         const currentUserEmail = currentUser?.email;
-        return chat?.users?.find(user => user?.email !== currentUserEmail);
+        const otherUser = chat.users.find(user => user?.email !== currentUserEmail);
+        return otherUser || null;
     };
 
     if (loading) {
@@ -108,7 +117,7 @@ const Chatlist = () => {
                     <img 
                         src={currentUser?.image || defaultAvatar} 
                         className="w-10 h-10 object-cover rounded-full" 
-                        alt="Profile" 
+                        alt={currentUser?.fullName || "Profile"} 
                     />
                     <span className="hidden md:block">
                         <h3 className="font-semibold text-[#2A3D39] text-sm">
@@ -120,7 +129,10 @@ const Chatlist = () => {
                     </span>
                 </main>
                 
-                <button className="hidden md:flex items-center justify-center w-10 h-10 bg-[#D9F2ED] rounded-lg">
+                <button 
+                    className="hidden md:flex items-center justify-center w-10 h-10 bg-[#D9F2ED] rounded-lg hover:bg-[#c8eae3] transition-colors"
+                    aria-label="More options"
+                >
                     <RiMore2Fill color="#01AA85" />
                 </button>
             </header>
@@ -129,7 +141,7 @@ const Chatlist = () => {
             <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-700">
-                        Messages ({chats?.length || 0})
+                        Messages {(chats?.length || 0)}
                     </h3>
                     <SearchModal startChat={startChat} />
                 </div>
@@ -146,7 +158,7 @@ const Chatlist = () => {
 
                         return (
                             <button 
-                                key={chat.id} 
+                                key={chat.id || `chat-${otherUser.uid}`} 
                                 className={`flex items-center w-full p-4 border-b border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer ${
                                     isActive ? 'bg-green-100' : ''
                                 }`}
@@ -155,7 +167,7 @@ const Chatlist = () => {
                                 <img 
                                     src={otherUser?.image || defaultAvatar} 
                                     className="h-12 w-12 rounded-full object-cover flex-shrink-0" 
-                                    alt={otherUser.fullName} 
+                                    alt={otherUser?.fullName || "User"} 
                                 />
                                 <div className="flex-1 min-w-0 ml-3 text-left">
                                     <div className="flex justify-between items-start">
