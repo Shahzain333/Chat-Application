@@ -168,7 +168,15 @@ class FirebaseService {
             const userDoc = await getDoc(userDocRef);
             
             if(userDoc.exists()){
-                return userDoc.data();
+                const userData = userDoc.data();
+                // Convert Firebase timestamps to plain objects
+                if (userData.createdAt) {
+                    userData.createdAt = {
+                        seconds: userData.createdAt.seconds,
+                        nanoseconds: userData.createdAt.nanoseconds
+                    };
+                }
+                return userData;
             } else {
                 return null;
             }

@@ -4,7 +4,7 @@ import { selectUser } from '../store/authSlice'
 import SideBar from '../components/SideBar'
 import ChatList from '../components/ChatList'
 import ChatBox from '../components/Chatbox' 
-import { clearChatState, setSelectedUser } from '../store/chatSlice'
+import { clearChatState, setSelectedUser, setMessages } from '../store/chatSlice'
 
 function Dashboard() {
   
@@ -35,27 +35,22 @@ function Dashboard() {
   }, [selectedUser])
 
   const handleBackToChats = () => {
-    dispatch(clearChatState())
+    //dispatch(clearChatState())
+    dispatch(setSelectedUser(null))
+    dispatch(setMessages([]))
+
     if (isMobile) {
       setMobileView('chatlist')
     }
+  
   }
 
-  // Alternative: If you only want to clear messages but keep chats
-  // const handleBackToChatsAlternative = () => {
-  //     dispatch(setSelectedUser(null));
-  //     dispatch(setMessages([])); // Only clear messages, keep chats
-  //     if (isMobile) {
-  //         setMobileView('chatlist');
-  //     }
-  // };
-
-  const handleSelectUser = (user) => {
-    dispatch(setSelectedUser(user))
-    if (isMobile) {
-      setMobileView('chatbox')
-    }
-  }
+  // const handleSelectUser = (user) => {
+  //   dispatch(setSelectedUser(user))
+  //   if (isMobile) {
+  //     setMobileView('chatbox')
+  //   }
+  // }
 
   return (
     <div className='flex h-screen app-background overflow-hidden'>

@@ -18,8 +18,8 @@ function Chatbox({ onBack }) {
     const chatId = useMemo(() => {
         if (!selectedUser || !currentUser) return null;
         return currentUser.uid < selectedUser.uid 
-            ? `${currentUser.uid}_${selectedUser.uid}`
-            : `${selectedUser.uid}_${currentUser.uid}`;
+            ? `${currentUser.uid}-${selectedUser.uid}`
+            : `${selectedUser.uid}-${currentUser.uid}`;
     }, [selectedUser, currentUser]);
 
     // Messages listener
