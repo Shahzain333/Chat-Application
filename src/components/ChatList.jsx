@@ -99,15 +99,15 @@ const Chatlist = () => {
         return otherUser || null;
     };
 
-    if (loading) {
-        return (
-            <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200">
-                <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500">Loading...</p>
-                </div>
-            </section>
-        );
-    }
+    // if (loading) {
+    //     return (
+    //         <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200">
+    //             <div className="flex items-center justify-center h-full">
+    //                 <p className="text-gray-500">Loading...</p>
+    //             </div>
+    //         </section>
+    //     );
+    // }
 
     return (
         <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200">

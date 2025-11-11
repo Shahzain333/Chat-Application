@@ -54,6 +54,7 @@ function Dashboard() {
 
   return (
     <div className='flex h-screen app-background overflow-hidden'>
+      
       <div className={`${!isMobile || mobileView === 'chatlist' ? 'flex' : 'hidden'}`}>
         <SideBar />
       </div>

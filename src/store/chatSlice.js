@@ -22,7 +22,7 @@ const convertAllTimestamps = (obj) => {
     const converted = { ...obj };
     
     for (const key in converted) {
-        if (key === 'timestamp' || key === 'lastMessageTimestamp' || key === 'createdAt' || key === 'lastUpdated') {
+        if (key === 'timestamp' || key === 'lastMessageTimestamp' || key === 'createdAt' || key === 'lastUpdated' || key === 'editedAt') {
             converted[key] = convertTimestamp(converted[key]);
         } else if (typeof converted[key] === 'object' && converted[key] !== null) {
             converted[key] = convertAllTimestamps(converted[key]);
@@ -47,7 +47,6 @@ const chatSlice = createSlice({
         setChats: (state, action) => {
             // Convert ALL timestamps in chats and nested objects
             state.chats = action.payload.map(chat => convertAllTimestamps(chat));
-        
         },
         setMessages: (state, action) => {
             // Convert ALL timestamps in messages
@@ -58,6 +57,91 @@ const chatSlice = createSlice({
             const convertedMessage = convertAllTimestamps(action.payload);
             state.messages.push(convertedMessage);
         },
+        
+        // CORRECTED: Update message functionality
+        updateMessage: (state, action) => {
+
+            const { messageId, newText } = action.payload;
+            
+            // Find the message in the messages array
+            const messageIndex = state.messages.findIndex(msg => msg.id === messageId);
+            
+            if (messageIndex !== -1) {
+                // Update the message text and mark as edited
+                state.messages[messageIndex].text = newText;
+                state.messages[messageIndex].edited = true;
+                state.messages[messageIndex].editedAt = convertTimestamp(new Date());
+                
+                // Also update the chat's last message if this message is the last one
+                const lastMessage = state.messages[state.messages.length - 1];
+                if (lastMessage && lastMessage.id === messageId) {
+                    // Find the chat that contains this message
+                    const chatIndex = state.chats.findIndex(chat => 
+                        chat.users?.some(user => user.uid === state.currentUser?.uid) &&
+                        chat.users?.some(user => user.uid === state.selectedUser?.uid)
+                    );
+                    
+                    if (chatIndex !== -1) {
+                        state.chats[chatIndex].lastMessage = newText;
+                        state.chats[chatIndex].lastMessageTimestamp = convertTimestamp(new Date());
+                    }
+                }
+            }
+        },
+        
+        // NEW: Delete message functionality
+        deleteMessage: (state, action) => {
+            
+            const messageId = action.payload;
+            
+            // Find the message before deleting it
+            const messageToDelete = state.messages.find(msg => msg.id === messageId);
+            
+            // Remove the message from messages array
+            state.messages = state.messages.filter(msg => msg.id !== messageId);
+            
+            // Update chat's last message if the deleted message was the last one
+            if (messageToDelete) {
+                const isLastMessage = state.messages.length === 0 || 
+                    !state.messages.some(msg => 
+                        msg.timestamp?.seconds > (messageToDelete.timestamp?.seconds || 0)
+                    );
+                
+                if (isLastMessage) {
+                    const chatIndex = state.chats.findIndex(chat => 
+                        chat.users?.some(user => user.uid === state.currentUser?.uid) &&
+                        chat.users?.some(user => user.uid === state.selectedUser?.uid)
+                    );
+                    
+                    if (chatIndex !== -1) {
+                        if (state.messages.length > 0) {
+                            // Find the new last message
+                            const newLastMessage = state.messages.reduce((latest, msg) => {
+                                const msgTime = msg.timestamp?.seconds || 0;
+                                const latestTime = latest.timestamp?.seconds || 0;
+                                return msgTime > latestTime ? msg : latest;
+                            });
+                            
+                            state.chats[chatIndex].lastMessage = newLastMessage.text;
+                            state.chats[chatIndex].lastMessageTimestamp = newLastMessage.timestamp;
+                        } else {
+                            // No messages left in chat
+                            state.chats[chatIndex].lastMessage = "";
+                            state.chats[chatIndex].lastMessageTimestamp = null;
+                        }
+                    }
+                }
+            }
+        },
+        
+        // NEW: Remove optimistic message (for failed sends)
+        removeOptimisticMessage: (state, action) => {
+            const tempMessageId = action.payload;
+            state.messages = state.messages.filter(msg => 
+                !(msg.id === tempMessageId && msg.isOptimistic)
+            );
+        },
+        
         setSelectedUser: (state, action) => {
             state.selectedUser = convertAllTimestamps(action.payload);
         },
@@ -67,14 +151,6 @@ const chatSlice = createSlice({
         },
         setLoading: (state, action) => {
             state.loading = action.payload;
-        },
-        updateChatLastMessage: (state, action) => {
-            const { chatId, lastMessage, lastMessageTimestamp } = action.payload;
-            const chatIndex = state.chats.findIndex(chat => chat.id === chatId);
-            if (chatIndex !== -1) {
-                state.chats[chatIndex].lastMessage = lastMessage;
-                state.chats[chatIndex].lastMessageTimestamp = convertTimestamp(lastMessageTimestamp);
-            }
         },
         clearChatState: (state) => {
             return { ...initialState };
@@ -86,10 +162,12 @@ export const {
   setChats,
   setMessages,
   addMessage,
+  updateMessage,
+  deleteMessage,
+  removeOptimisticMessage,
   setSelectedUser,
   setCurrentUser,
   setLoading,
-  updateChatLastMessage,
   clearChatState
 } = chatSlice.actions;
 

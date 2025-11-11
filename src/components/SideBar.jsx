@@ -39,8 +39,12 @@ function SideBar() {
         }
     };
 
+    const handleChat = () => {
+        toggleMobileMenu() 
+    }
+
     const menuItems = [
-        { icon: RiChatAiLine, label: 'chat' },
+        { icon: RiChatAiLine, label: 'chat' , onClick: handleChat },
         { icon: RiFolderUserLine, label: 'folder' },
         { icon: RiNotificationLine, label: 'notification' },
         { icon: RiFile4Line, label: 'file' },
@@ -65,13 +69,16 @@ function SideBar() {
             </section>
 
             {/* Sidebar */}
-            <section className={`fixed md:static top-16 md:top-0 left-0 h-[calc(100vh-4rem)] md:h-screen w-full md:w-30 bg-[#01AA85] transform transition-transform duration-300 ease-in-out z-40 ${
-                isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-            } shadow-xl md:shadow-none`}>
+            <section className={`fixed md:static top-16 md:top-0 left-0 h-[calc(100vh-4rem)] md:h-screen 
+            w-full md:w-30 bg-[#01AA85] transform transition-transform duration-300 ease-in-out 
+            z-40 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} 
+            shadow-xl md:shadow-none`}>
                 <main className="flex flex-col items-center gap-4 md:gap-8 h-full py-6 md:py-8">
                     {/* Logo */}
-                    <div className="hidden md:flex justify-center border-b border-[#ffffffb9] w-full pb-6 px-4">
-                        <img src={logo} className="w-12 h-12 object-contain bg-white rounded-lg p-2" alt="Logo" />
+                    <div className="hidden md:flex justify-center border-b border-[#ffffffb9] w-full 
+                    pb-6 px-4">
+                        <img src={logo} className="w-12 h-12 object-contain bg-white rounded-lg p-2" 
+                        alt="Logo" />
                     </div>
 
                     {/* Menu Items */}
@@ -80,7 +87,9 @@ function SideBar() {
                             <li key={index} className="w-full">
                                 <button 
                                     onClick={item.onClick}
-                                    className="flex items-center justify-start md:justify-center gap-3 w-full p-3 rounded-lg md:rounded-xl hover:bg-[#018f70] transition-colors duration-200 cursor-pointer"
+                                    className="flex items-center justify-start md:justify-center gap-3 
+                                    w-full p-3 rounded-lg md:rounded-xl hover:bg-[#018f70] 
+                                    transition-colors duration-200 cursor-pointer"
                                 >
                                     <item.icon className="text-2xl md:text-[26px]" color="#fff" />
                                     <span className="md:hidden text-white font-medium capitalize text-lg">
