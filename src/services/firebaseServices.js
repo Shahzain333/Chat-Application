@@ -276,6 +276,7 @@ class FirebaseService {
         return unsubscribe;
     }
 
+    // Send Messages to the user
     async sendMessage(messageText, chatId, user1, user2) {
         try {
             
@@ -397,7 +398,7 @@ class FirebaseService {
     }
 
     // Helper method to update chat's last message after message update
-    // Fixed: Update chat's last message after message update
+    // Update chat's last message after message update
     async updateChatLastMessage(chatId, oldMessageText, newMessageText) {
         try {
             const chatRef = doc(this.db, "chats", chatId);
@@ -469,6 +470,43 @@ class FirebaseService {
             }
         } catch (error) {
             console.error("Error updating chat last message after deletion:", error);
+        }
+    }
+
+    // Delete Chats
+    async deleteChats(chatId) {
+        try {
+
+            if (!chatId) {
+                throw new Error("Chat ID is required");
+            }
+
+            const chatRef = doc(this.db, "chats", chatId);
+            const chatDoc = await getDoc(chatRef);
+            
+            if (!chatDoc.exists()) {
+                throw new Error("Chat not found");
+            }
+
+            // Delete all messages in the chat first
+            const messagesRef = collection(this.db, "chats", chatId, "messages");
+            const messagesSnapshot = await getDocs(messagesRef);
+            
+            // Delete all messages
+            const deletePromises = messagesSnapshot.docs.map(messageDoc => 
+                deleteDoc(doc(this.db, "chats", chatId, "messages", messageDoc.id))
+            );
+            
+            await Promise.all(deletePromises);
+            
+            // Then delete the chat document
+            await deleteDoc(chatRef);
+            
+            console.log("Chat deleted successfully");
+            
+        } catch (error) {
+            console.error("Error deleting chat:", error);
+            throw error;
         }
     }
 

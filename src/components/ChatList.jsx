@@ -1,19 +1,27 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import defaultAvatar from "../assets/default.jpg";
-import { RiMore2Fill } from "react-icons/ri";
+import { RiMore2Fill, RiCloseLine, RiEditLine, RiDeleteBinLine } from "react-icons/ri";
 import SearchModal from "../components/SearchModal";
 import { formatTimestamp } from "../utils/formatTimestamp";
 import firebaseService from "../services/firebaseServices";
-import { setSelectedUser, setChats, setCurrentUser, setLoading, clearChatState } from "../store/chatSlice";
+import { setSelectedUser, setChats, setCurrentUser, setLoading, clearChatState, deleteChats, setMessages } from "../store/chatSlice"; // ✅ Fixed import name
 import { useSelector, useDispatch } from "react-redux";
 
-const Chatlist = () => {
+function Chatlist() {
+
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const dispatch = useDispatch();
     const { chats, selectedUser, currentUser, loading } = useSelector(state => state.chat);
 
+    const chatId = useMemo(() => {
+        if (!selectedUser?.uid || !currentUser?.uid) return null;
+        return currentUser.uid < selectedUser.uid 
+            ? `${currentUser.uid}-${selectedUser.uid}`
+            : `${selectedUser.uid}-${currentUser.uid}`;
+    }, [selectedUser, currentUser]);
+
     // Single useEffect for initialization
     useEffect(() => {
-        
         let unsubscribeUser = () => {};
         let unsubscribeChats = () => {};
 
@@ -75,6 +83,28 @@ const Chatlist = () => {
         };
     }, [dispatch]);
 
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            const menu = document.querySelector('.mobile-menu');
+            const menuButton = document.querySelector('.menu-button');
+
+            if (menu && menuButton && !menu.contains(e.target) && !menuButton.contains(e.target)) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        // Only add event listener when menu is open
+        if (isMobileMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+
+    }, [isMobileMenuOpen]); // Re-run when isMobileMenuOpen changes
+
     const sortedChats = useMemo(() => {
         if (!chats || !Array.isArray(chats)) return [];
         
@@ -99,18 +129,41 @@ const Chatlist = () => {
         return otherUser || null;
     };
 
-    // if (loading) {
-    //     return (
-    //         <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200">
-    //             <div className="flex items-center justify-center h-full">
-    //                 <p className="text-gray-500">Loading...</p>
-    //             </div>
-    //         </section>
-    //     );
-    // }
+    const toggleMenuList = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
+    // Delete function with correct action names
+    const handleDeleteSelectedUserChats = async () => {
+        if (!selectedUser || !currentUser) {
+            alert("Please select a user first to delete the chat.");
+            setIsMobileMenuOpen(false);
+            return;
+        }
+
+        if (window.confirm(`Are you sure you want to delete all chats and messages with ${selectedUser?.fullName || 'this user'}? This action cannot be undone.`)) {
+            try {
+                dispatch(setLoading(true));
+                await firebaseService.deleteChats(chatId); 
+                dispatch(deleteChats(chatId)); 
+                dispatch(setSelectedUser(null));
+                dispatch(setMessages([]));
+                setIsMobileMenuOpen(false);
+                alert("Chat deleted successfully!");
+
+            } catch (error) {
+                console.error('Error deleting chat:', error);
+                alert('Failed to delete chat. Please try again.');
+            } finally {
+                dispatch(setLoading(false));
+            }
+        } else {
+            setIsMobileMenuOpen(false);
+        }
+    };
 
     return (
-        <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200">
+        <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200 relative">
             {/* Header */}
             <header className="flex items-center justify-between p-4 md:border-b md:border-gray-200">
                 <main className="flex items-center gap-3">
@@ -130,12 +183,42 @@ const Chatlist = () => {
                 </main>
                 
                 <button 
-                    className="hidden md:flex items-center justify-center w-10 h-10 bg-[#D9F2ED] rounded-lg hover:bg-[#c8eae3] transition-colors"
+                    className="hidden md:flex items-center justify-center w-10 h-10 bg-[#D9F2ED] 
+                    rounded-lg hover:bg-[#c8eae3] transition-colors cursor-pointer menu-button"
                     aria-label="More options"
+                    onClick={toggleMenuList}
                 >
-                    <RiMore2Fill color="#01AA85" />
+                    {isMobileMenuOpen ? <RiCloseLine color="#01AA85" /> : <RiMore2Fill color="#01AA85" />}
                 </button>
             </header>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+                <div className="mobile-menu absolute top-16 md:top-14 right-4 bg-white border 
+                border-gray-200 rounded-lg shadow-xl z-50 min-w-[160px] py-2">
+                    <ul className="space-y-1">
+                        <li>
+                            <button 
+                                className="flex items-center gap-3 w-full px-4 py-3 text-left 
+                                hover:bg-red-50 transition-colors text-red-600" 
+                                onClick={handleDeleteSelectedUserChats}
+                            >
+                                <RiDeleteBinLine className="text-red-500 text-lg" />
+                                <span className="text-sm font-medium">
+                                    {selectedUser ? `Delete ${selectedUser.fullName || 'User'}` : 'Delete User'}
+                                </span>
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    {/* Optional: Show status message */}
+                    {!selectedUser && (
+                        <div className="px-4 py-2 text-xs text-gray-500 border-t border-gray-100 mt-2">
+                            Select a user first to delete chat
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Messages Header */}
             <div className="p-4 border-b border-gray-200">

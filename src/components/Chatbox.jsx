@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import defaultAvatar from '../assets/default.jpg';
-import { RiSendPlaneFill, RiArrowLeftLine, RiEditLine, RiDeleteBinLine, RiCheckLine, RiCloseLine } from 'react-icons/ri';
+import { RiSendPlaneFill, RiArrowLeftLine, RiEditLine, RiDeleteBinLine, 
+    RiCheckLine, RiCloseLine, RiMore2Fill, } from 'react-icons/ri';
 import Logo from '../assets/logo.png';
 import { formatTimestamp } from '../utils/formatTimestamp';
 import firebaseService from '../services/firebaseServices';
@@ -11,7 +12,8 @@ import {
   setLoading, 
   addMessage, 
   updateMessage,
-  removeOptimisticMessage 
+  removeOptimisticMessage,
+  deleteChats
 } from '../store/chatSlice';
 
 function Chatbox({ onBack }) {
@@ -19,6 +21,7 @@ function Chatbox({ onBack }) {
     const [messageText, setMessageText] = useState('');
     const [editingMessage, setEditingMessage] = useState(null);
     const [activeMessageId, setActiveMessageId] = useState(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const scrollRef = useRef(null);
     
@@ -179,6 +182,58 @@ function Chatbox({ onBack }) {
         setMessageText('');
     };
 
+    // Delete chats
+    const handleDeleteSelectedUserChats = async () => {
+        if (!selectedUser || !currentUser) {
+            alert("Please select a user first to delete the chat.");
+            setIsMobileMenuOpen(false);
+            return;
+        }
+
+        if (window.confirm(`Are you sure you want to delete all chats and messages with 
+            ${selectedUser?.fullName || 'this user'}? This action cannot be undone.`)) {
+                try {
+                    dispatch(setLoading(true))
+                    await firebaseService.deleteChats(chatId)
+                    dispatch(deleteChats(chatId))
+                    dispatch(setSelectedUser(null))
+                    dispatch(setMessages([]))
+                    setIsMobileMenuOpen(false);
+                    alert("Chat deleted successfully!");
+
+                } catch (error) {
+                    console.error('Error deleting chat:', error);
+                    alert('Failed to delete chat. Please try again.');
+                } finally {
+                    dispatch(setLoading(false))
+                }
+        } else {
+            setIsMobileMenuOpen(false)
+        }
+    }
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            const menu = document.querySelector('.mobile-menu');
+            const menuButton = document.querySelector('.menu-button');
+
+            if (menu && menuButton && !menu.contains(e.target) && !menuButton.contains(e.target)) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        // Only add event listener when menu is open
+        if (isMobileMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+
+    }, [isMobileMenuOpen]); // Re-run when isMobileMenuOpen changes
+
     // Show loading state
     if (loading && messages.length === 0) {
         return (
@@ -203,10 +258,14 @@ function Chatbox({ onBack }) {
         );
     }
 
+    const toggleMenuList = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen)
+    }
+
     return (
         <section className='flex flex-col h-screen w-full app-background'>
             {/* Header Of ChatBox */}
-            <header className='border-b border-gray-400 w-full h-[75px] p-4 bg-white flex-shrink-0'>
+            <header className='flex justify-between border-b border-gray-400 w-full h-[75px] p-4 bg-white flex-shrink-0'>
                 <main className='flex items-center gap-2'>
                     <button 
                         onClick={handleBack} 
@@ -233,6 +292,39 @@ function Chatbox({ onBack }) {
                         </p>
                     </div>
                 </main>
+
+                <button 
+                    className="flex items-center justify-center w-10 h-10 bg-[#D9F2ED] 
+                    rounded-lg hover:bg-[#c8eae3] transition-colors cursor-pointer menu-button"
+                    aria-label="More options"
+                    onClick={toggleMenuList}
+                >
+                    {isMobileMenuOpen ? <RiCloseLine color="#01AA85" /> : <RiMore2Fill color="#01AA85" />}
+                </button>
+
+                {
+                    isMobileMenuOpen ? (
+                        <div className="mobile-menu absolute top-16 right-4 md:top-14 md:right-4 bg-white border 
+                        border-gray-200 rounded-lg shadow-xl z-50 min-w-[120px] py-2">
+                            <ul className="space-y-1">
+                                {/* <li>
+                                    <button className="flex items-center gap-3 w-full px-4 py-3 text-left 
+                                    hover:bg-gray-100 transition-colors text-gray-700">
+                                        <RiEditLine className="text-gray-500 text-lg" />
+                                        <span className="text-sm font-medium">Edit User</span>
+                                    </button>
+                                </li> */}
+                                <li>
+                                    <button className="flex items-center gap-3 w-full px-4 py-3 text-left 
+                                    hover:bg-red-50 transition-colors text-red-600" onClick={handleDeleteSelectedUserChats}>
+                                        <RiDeleteBinLine className="text-red-500 text-lg" />
+                                        {selectedUser ? `Delete ${selectedUser.fullName || 'User'}` : 'Delete User'}
+                                    </button></li>
+                            </ul>
+                        </div>
+                    ) : null
+                }
+                
             </header>
 
             <main className='flex flex-col flex-1 w-full min-h-0'>

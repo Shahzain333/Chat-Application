@@ -1,4 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
+import { selectAuth } from './authSlice';
+import Chatlist from '../components/ChatList';
 
 // Helper function to convert Firebase timestamps to plain objects
 const convertTimestamp = (timestamp) => {
@@ -48,17 +50,35 @@ const chatSlice = createSlice({
             // Convert ALL timestamps in chats and nested objects
             state.chats = action.payload.map(chat => convertAllTimestamps(chat));
         },
+        // Del Chats Functionallity
+        deleteChats : (state,action) => {
+
+            const chatId = action.payload
+            state.chats = state.chats.filter(chat => chat.id === chatId)
+
+            // Also Clear Messages and selected User if we are curently viewing this chats
+            // const currentChatId = state.currentUser?.uid && state.selectedUser?.uid ?
+            //   state.currentUser.uid < state.selectedUser.uid ? 
+            //   `${state.currentUser.uid}-${state.selectedUser.uid}` :
+            //   `${state.selectedUser.uid}-${state.currentUser.uid}` : null
+
+            //   if(currentChatId === chatId) {
+            //     state.messages = []
+            //     state.selectedUser = null
+            //   }
+            
+        },
         setMessages: (state, action) => {
             // Convert ALL timestamps in messages
             state.messages = action.payload.map(message => convertAllTimestamps(message));
         },
+        // ADD message functionality
         addMessage: (state, action) => {
             // Convert timestamp for single message
             const convertedMessage = convertAllTimestamps(action.payload);
             state.messages.push(convertedMessage);
-        },
-        
-        // CORRECTED: Update message functionality
+        },   
+        // Update message functionality
         updateMessage: (state, action) => {
 
             const { messageId, newText } = action.payload;
@@ -88,8 +108,7 @@ const chatSlice = createSlice({
                 }
             }
         },
-        
-        // NEW: Delete message functionality
+        // Delete message functionality
         deleteMessage: (state, action) => {
             
             const messageId = action.payload;
@@ -133,15 +152,13 @@ const chatSlice = createSlice({
                 }
             }
         },
-        
-        // NEW: Remove optimistic message (for failed sends)
+        // Remove optimistic message (for failed sends)
         removeOptimisticMessage: (state, action) => {
             const tempMessageId = action.payload;
             state.messages = state.messages.filter(msg => 
                 !(msg.id === tempMessageId && msg.isOptimistic)
             );
         },
-        
         setSelectedUser: (state, action) => {
             state.selectedUser = convertAllTimestamps(action.payload);
         },
@@ -168,7 +185,8 @@ export const {
   setSelectedUser,
   setCurrentUser,
   setLoading,
-  clearChatState
+  clearChatState,
+  deleteChats
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
