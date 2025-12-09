@@ -76,13 +76,14 @@ function SearchModal({ startChat }) {
                 </div>
 
                 <div className="mt-6">
-                  {users.map((user) => (
+                  {users.map((user, index) => (
                     <div 
                       onClick={() => {
                         startChat(user);
                         closeModal();
                       }}
-                      className='flex items-start gap-3 bg-[#15eabc34] p-2 mb-3 rounded-lg cursor-pointer border border-[#ffffff20] shadow-lg'>
+                      className='flex items-start gap-3 bg-[#15eabc34] p-2 mb-3 rounded-lg cursor-pointer border border-[#ffffff20] shadow-lg'
+                      key={index}>
                       <img src={user?.image || defaultAvatar} className="h-[40px] w-[40px] rounded-full" alt=''/>
                       <span>
                         <h2 className="p-0 font-semibold text-white text-[18px]">{user?.fullName}</h2>
