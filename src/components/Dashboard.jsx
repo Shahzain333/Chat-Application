@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { selectUser } from '../store/authSlice'
 import SideBar from '../components/SideBar'
-import ChatList from '../components/ChatList'
+import ChatList from '../components/Chatlist/ChatList'
 import ChatBox from '../components/Chatbox' 
 import { clearChatState, setSelectedUser, setMessages } from '../store/chatSlice'
 

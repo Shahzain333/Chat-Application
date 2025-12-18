@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Login from './components/Login'
 import { useDispatch } from 'react-redux';
 import { clearChatState } from './store/chatSlice';
+import { Toaster } from 'sonner'
 
 function Layout() {
 
@@ -27,6 +28,7 @@ function Layout() {
 
   return (
     <div className="app-background">
+      <Toaster position="top-center" />
       {/* <Login /> */}
       <Outlet /> {/* or your router component */}
     </div>

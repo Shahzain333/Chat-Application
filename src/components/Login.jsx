@@ -102,15 +102,15 @@ function Login() {
     useEffect(() => {
 
         // Initialize server restart detection when component mounts
-        const checkServerRestart = async () => {
-            try {
-                await firebaseService.initServerRestartDetection()
-            } catch (error) {
-                console.error('Server restart check failed:', error);
-            }
-        }
+        // const checkServerRestart = async () => {
+        //     try {
+        //        // await firebaseService.initServerRestartDetection()
+        //     } catch (error) {
+        //         console.error('Server restart check failed:', error);
+        //     }
+        // }
 
-        checkServerRestart()
+        //checkServerRestart()
 
         const unsubscribe = firebaseService.onAuthStateChange(async (authUser) => {
 

@@ -5,6 +5,7 @@ import defaultAvatar from '../assets/default.jpg'
 import firebaseService from '../services/firebaseServices'
 
 function SearchModal({ startChat }) {
+  
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [users,setUsers] = useState([])
@@ -38,7 +39,7 @@ function SearchModal({ startChat }) {
   return (
     <div>
 
-      <button onClick={openModal} className="bg-[#D9F2ED] w-[35px] h-[35px] p-2 flex items-center justify-center rounded-lg cursor-pointer">
+      <button onClick={openModal} className="w-[35px] h-[35px] p-2 flex items-center justify-center rounded-lg cursor-pointer">
         <RiSearchLine color="#01AA85" className="w-[18px] h-[18px]" />
       </button>
 

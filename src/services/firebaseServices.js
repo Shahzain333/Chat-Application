@@ -46,7 +46,7 @@ class FirebaseService {
         this.googleProvider = new GoogleAuthProvider();
         this.githubProvider = new GithubAuthProvider();
 
-        this.initServerRestartDetection()
+        // this.initServerRestartDetection()
     } 
      
     async signUp(email, password, username = '') {
@@ -107,38 +107,38 @@ class FirebaseService {
         return onAuthStateChanged(this.auth, callback);
     }
 
-    async initServerRestartDetection() {
-        const serverStatusRef = doc(this.db, 'system', 'serverStatus')
+    // async initServerRestartDetection() {
+    //     const serverStatusRef = doc(this.db, 'system', 'serverStatus')
         
-        try {
+    //     try {
 
-            const serverDoc = await getDoc(serverStatusRef)
-            const currentServerTime = Date.now().toString()
+    //         const serverDoc = await getDoc(serverStatusRef)
+    //         const currentServerTime = Date.now().toString()
 
-            if(!serverDoc.exists()){
-                await setDoc(serverStatusRef, {
-                    startTime: currentServerTime,
-                    lastUpdated: serverTimestamp()
-                })
-            } else {
+    //         if(!serverDoc.exists()){
+    //             await setDoc(serverStatusRef, {
+    //                 startTime: currentServerTime,
+    //                 lastUpdated: serverTimestamp()
+    //             })
+    //         } else {
              
-                const serverData = serverDoc.data()
-                const lastServerTime = localStorage.getItem('firebaseServerTime')
+    //             const serverData = serverDoc.data()
+    //             const lastServerTime = localStorage.getItem('firebaseServerTime')
 
-                if(lastServerTime && lastServerTime !== serverData.startTime){
-                    console.log('Firebase server restart detected, logging out user');
-                    await this.signOut();
-                    localStorage.clear();
-                    sessionStorage.clear();
-                }
+    //             if(lastServerTime && lastServerTime !== serverData.startTime){
+    //                 console.log('Firebase server restart detected, logging out user');
+    //                 await this.signOut();
+    //                 localStorage.clear();
+    //                 sessionStorage.clear();
+    //             }
                 
-                localStorage.setItem('firebaseServerTime', serverData.startTime)
+    //             localStorage.setItem('firebaseServerTime', serverData.startTime)
             
-            }
-        } catch (error) {
-            console.error('Error in Firebase restart detection:', error);
-        }
-    }
+    //         }
+    //     } catch (error) {
+    //         console.error('Error in Firebase restart detection:', error);
+    //     }
+    // }
 
     async addUser(userData) {
         try {
@@ -200,6 +200,67 @@ class FirebaseService {
         return unsubscribe
     }
 
+    // Add to FirebaseService class in firebaseServices.js
+    async getAllUsers() {
+        try {
+
+            const currentUserId = this.getCurrentUserId();
+            const usersRef = collection(this.db, "users");
+            const usersSnapshot = await getDocs(usersRef);
+            
+            const allUsers = [];
+
+            usersSnapshot.forEach((doc) => {
+            
+                const userData = doc.data();
+                // Exclude current user from the list
+                if (doc.id !== currentUserId) {
+                    allUsers.push({ 
+                        id: doc.id,
+                        uid: doc.id,
+                        ...userData
+                    });
+                }
+
+            });
+            
+            return allUsers;
+
+        } catch (error) {
+            console.error("Error getting all users:", error);
+            throw error;
+        }
+    }
+
+    // Add real-time listener for all users
+    listenForAllUsers(callback) {
+
+        const currentUserId = this.getCurrentUserId();
+        const usersRef = collection(this.db, 'users');
+        
+        const unsubscribe = onSnapshot(usersRef, (snapshot) => {
+        
+            const allUsers = [];
+            
+            snapshot.forEach((doc) => {
+        
+                if (doc.id !== currentUserId) {
+                    allUsers.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                }
+        
+            });
+        
+            callback(allUsers);
+        
+        });
+        
+        return unsubscribe;
+    
+    }
+
     async searchUsers(searchTerm) {
         try {
      
@@ -232,23 +293,34 @@ class FirebaseService {
     }
 
     listenForChats(callback) {
-        const chatsRef = collection(this.db, 'chats');
-        
-        const unsubscribe = onSnapshot(chatsRef, (snapshot) => {
-            const chatList = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
+        try {
+            const chatsRef = collection(this.db, 'chats');
 
-            const currentUserEmail = this.auth.currentUser?.email;
-            const filteredChats = chatList.filter((chat) => 
-                chat?.users?.some((user) => user.email === currentUserEmail)
+            // Add real-time orderBy for timestamp
+            const q = query(
+                chatsRef, 
+                orderBy('lastMessageTimestamp', 'desc') 
             );
+            
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const chatList = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
 
-            callback(filteredChats);
-        });
+                const currentUserEmail = this.auth.currentUser?.email;
+                const filteredChats = chatList.filter((chat) => 
+                    chat?.users?.some((user) => user.email === currentUserEmail)
+                );
 
-        return unsubscribe;
+                callback(filteredChats);
+          });
+
+           return unsubscribe;
+
+        } catch (error) {
+            console.error("Error listening to chats:", error);
+        }
     }
 
     listenForMessages(chatId, callback) {
@@ -295,6 +367,7 @@ class FirebaseService {
                     users: [user1Data, user2Data],
                     lastMessage: messageText,
                     lastMessageTimestamp: serverTimestamp(),
+                    createdAt: serverTimestamp()
                 });
             } else {
                 await updateDoc(chatRef, {
@@ -397,7 +470,6 @@ class FirebaseService {
         }
     }
 
-    // Helper method to update chat's last message after message update
     // Update chat's last message after message update
     async updateChatLastMessage(chatId, oldMessageText, newMessageText) {
         try {
@@ -429,7 +501,7 @@ class FirebaseService {
         }
     }
 
-    // Helper method to update chat's last message after message deletion
+    // update chat's last message after message deletion
     async updateChatLastMessageAfterDeletion(chatId, deletedMessageText) {
         try {
             

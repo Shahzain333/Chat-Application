@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { selectAuth } from './authSlice';
-import Chatlist from '../components/ChatList';
+import Chatlist from '../components/Chatlist/ChatList';
 
 // Helper function to convert Firebase timestamps to plain objects
 const convertTimestamp = (timestamp) => {
@@ -35,6 +35,7 @@ const convertAllTimestamps = (obj) => {
 };
 
 const initialState = {
+    allUsers: [],
     chats: [],
     messages: [],
     selectedUser: null,
@@ -46,27 +47,32 @@ const chatSlice = createSlice({
     name: 'chat',
     initialState,
     reducers: {
+        setAllUsers: (state,action) => {
+            state.allUsers = action.payload;
+        },
         setChats: (state, action) => {
             // Convert ALL timestamps in chats and nested objects
             state.chats = action.payload.map(chat => convertAllTimestamps(chat));
         },
         // Del Chats Functionallity
-        deleteChats : (state,action) => {
-
-            const chatId = action.payload
-            state.chats = state.chats.filter(chat => chat.id === chatId)
-
-            // Also Clear Messages and selected User if we are curently viewing this chats
-            // const currentChatId = state.currentUser?.uid && state.selectedUser?.uid ?
-            //   state.currentUser.uid < state.selectedUser.uid ? 
-            //   `${state.currentUser.uid}-${state.selectedUser.uid}` :
-            //   `${state.selectedUser.uid}-${state.currentUser.uid}` : null
-
-            //   if(currentChatId === chatId) {
-            //     state.messages = []
-            //     state.selectedUser = null
-            //   }
+        // In chatSlice.js - make sure this is correct
+        deleteChats: (state, action) => {
+            const chatId = action.payload;
             
+            // FIX: Remove chat with this ID (use !== not ===)
+            state.chats = state.chats.filter(chat => chat.id !== chatId);
+            
+            // If the selected user is in the deleted chat, clear the selection
+            if (state.selectedUser) {
+                const chatWithSelectedUser = state.chats.find(chat => {
+                    return chat.users?.some(user => user.uid === state.selectedUser.uid);
+                });
+                
+                if (!chatWithSelectedUser) {
+                    state.selectedUser = null;
+                    state.messages = [];
+                }
+            }
         },
         setMessages: (state, action) => {
             // Convert ALL timestamps in messages
@@ -176,6 +182,7 @@ const chatSlice = createSlice({
 })
 
 export const {
+  setAllUsers,
   setChats,
   setMessages,
   addMessage,
@@ -186,7 +193,10 @@ export const {
   setCurrentUser,
   setLoading,
   clearChatState,
-  deleteChats
+  deleteChats,
+  removeChatByUserId,
 } = chatSlice.actions;
+
+export const selectAllUsers = (state) => state.chat.allUsers;
 
 export default chatSlice.reducer;
