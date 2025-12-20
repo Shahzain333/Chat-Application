@@ -286,7 +286,8 @@ function Chatlist() {
   }
 
   return (
-      <section className="flex flex-col h-screen w-full md:w-[300px] lg:w-[400px] bg-white border-r border-gray-200 relative">
+      <section className="flex flex-col h-full w-full bg-white border-r 
+      border-gray-200 relative">
         <Header 
           currentUser={currentUser} 
           isMenuOpen={isMobileMenuOpen} 
