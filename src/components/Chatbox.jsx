@@ -323,8 +323,10 @@ function Chatbox({ onBack }) {
 
     return (
         <section className='flex flex-col h-screen w-full app-background'>
+            
             {/* Header Of ChatBox */}
-            <header className='flex justify-between border-b border-gray-400 w-full h-[75px] p-4 bg-white flex-shrink-0'>
+            <header className='flex justify-between border-b border-gray-400 w-full h-[75px] p-4 
+            bg-white flex-shrink-0'>
                 <main className='flex items-center gap-2'>
                     <button 
                         onClick={handleBack} 
@@ -389,7 +391,9 @@ function Chatbox({ onBack }) {
             <main className='flex flex-col flex-1 w-full min-h-0'>
                 
                 <section className='flex-1 overflow-hidden px-3 pt-5'>
+                    
                     <div ref={scrollRef} className='h-full overflow-y-auto custom-scrollbar'>
+                        
                         <div className='min-h-full flex flex-col justify-end'>
                             {sortedMessages.length === 0 ? (
                                 <div className="flex-1 flex items-center justify-center text-gray-500 py-8">

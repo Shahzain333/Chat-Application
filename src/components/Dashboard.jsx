@@ -60,11 +60,16 @@ function Dashboard() {
       </div>
 
       <div className='flex-1 flex flex-col lg:flex-row relative'>
-        <div className={`${!isMobile || mobileView === 'chatlist' ? 'flex' : 'hidden'} lg:flex lg:w-[400px] xl:w-[500px] w-full absolute lg:relative inset-0 z-20 bg-white transition-transform duration-300 ${isMobile && mobileView === 'chatbox' ? '-translate-x-full' : 'translate-x-0'}`}>
+        
+        <div className={`${!isMobile || mobileView === 'chatlist' ? 'flex' : 'hidden'} lg:flex 
+          lg:w-[400px] xl:w-[500px] w-full absolute lg:relative inset-0 z-20 bg-white 
+          transition-transform duration-300 ${isMobile && mobileView === 'chatbox' ? 
+          '-translate-x-full' : 'translate-x-0'}`}>
           <ChatList />
         </div>
 
-        <div className={`${!isMobile || mobileView === 'chatbox' ? 'flex' : 'hidden'} w-full absolute lg:relative inset-0 z-30 bg-white transition-transform duration-300 ${
+        <div className={`${!isMobile || mobileView === 'chatbox' ? 'flex' : 'hidden'} w-full absolute 
+        lg:relative inset-0 z-30 bg-white transition-transform duration-300 ${
           isMobile && mobileView === 'chatlist' ? 'translate-x-full' : 'translate-x-0'}`}>
           {selectedUser ? (
             <ChatBox onBack={handleBackToChats} />

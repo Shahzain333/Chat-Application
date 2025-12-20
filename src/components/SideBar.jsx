@@ -70,7 +70,7 @@ function SideBar() {
 
             {/* Sidebar */}
             <section className={`fixed md:static top-16 md:top-0 left-0 h-[calc(100vh-4rem)] md:h-screen 
-            w-full md:w-30 bg-[#01AA85] transform transition-transform duration-300 ease-in-out 
+            w-full bg-[#01AA85] transform transition-transform duration-300 ease-in-out 
             z-40 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} 
             shadow-xl md:shadow-none`}>
                 <main className="flex flex-col items-center gap-4 md:gap-8 h-full py-6 md:py-8">

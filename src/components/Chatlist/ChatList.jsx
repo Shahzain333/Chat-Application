@@ -15,16 +15,20 @@ import MobileMenu from "./MobileMenu";
 import FilterSection from "./FilterSection";
 import UserList from "./UserList";
 import LoadingScreen from "./LoadingScreen";
+import SearchModal from "../../components/SearchModal";
 
 // Import custom hooks
 import { useChatUtils } from "../../hooks/useChatUtils";
 import { useFirebaseData } from "../../hooks/useFirebaseData";
+import { RiMessage2Fill } from "react-icons/ri";
 
 function Chatlist() {
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showOnlyChats, setShowOnlyChats] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   
   const dispatch = useDispatch();
   const { chats, selectedUser, currentUser, loading, allUsers } = useSelector(state => state.chat);
@@ -59,8 +63,66 @@ function Chatlist() {
     return map;
   }, [sortedChats, getOtherUserFromChat]);
 
+  // Memoized search results
+  const searchResults = useMemo(() => {
+    if (!searchTerm.trim()) return [];
+    
+    const normalizedSearchTerm = searchTerm.toLowerCase();
+    
+    return allUsers.filter(user => {
+      const username = (user.username || '').toLowerCase();
+      const fullName = (user.fullName || '').toLowerCase();
+      
+      return username.includes(normalizedSearchTerm) ||
+             fullName.includes(normalizedSearchTerm);
+
+    }).map(user => {
+      const chatData = userToChatMap.get(user.uid);
+      return chatData ? { ...user, ...chatData } : user;
+    })
+
+  }, [searchTerm, allUsers, userToChatMap]);
+
+  // Handle search from FilterSection
+  const handleSearch = useCallback((searchValue) => {
+    if (typeof searchValue === 'object' && searchValue?.uid) {
+      // If it's a user object, start chat immediately
+      dispatch(setSelectedUser(searchValue));
+      setActiveDropdown(null);
+      setSearchTerm(""); // Clear search term
+      return;
+    }
+
+    // Set search term (string or empty string)
+    setSearchTerm(typeof searchValue === 'string' ? searchValue : "");
+  }, [dispatch]);
+
   // Prepare users list
   const usersToDisplay = useMemo(() => {
+
+    if (searchTerm.trim()) {
+    
+      return searchResults.sort((a, b) => {
+    
+        const aHasChat = !!a.chatId;
+        const bHasChat = !!b.chatId;
+        
+        // Users with existing chats should appear first
+        if (aHasChat && !bHasChat) return -1;
+        if (!aHasChat && bHasChat) return 1;
+        
+        // If both have chats, sort by most recent message
+        if (aHasChat && bHasChat) {
+          const aTime = a.lastMessageTimestamp?.seconds || 0;
+          const bTime = b.lastMessageTimestamp?.seconds || 0;
+          return bTime - aTime;
+        }
+        
+        // If neither has chat, sort alphabetically
+        return (a.fullName || "").localeCompare(b.fullName || "");
+      });
+    }
+
     if (showOnlyChats) {
       return sortedChats.map(chat => {
         const otherUser = getOtherUserFromChat(chat);
@@ -75,11 +137,15 @@ function Chatlist() {
     }
     
     return allUsers.map(user => {
+    
       const chatData = userToChatMap.get(user.uid);
       return chatData ? { ...user, ...chatData } : user;
+    
     }).sort((a, b) => {
+    
       const aHasChat = !!a.chatId;
       const bHasChat = !!b.chatId;
+    
       if (aHasChat && !bHasChat) return -1;
       if (!aHasChat && bHasChat) return 1;
       if (aHasChat && bHasChat) {
@@ -87,13 +153,26 @@ function Chatlist() {
         const bTime = b.lastMessageTimestamp?.seconds || 0;
         return bTime - aTime;
       }
+    
       return (a.fullName || "").localeCompare(b.fullName || "");
+    
     });
-  }, [showOnlyChats, sortedChats, allUsers, userToChatMap, getOtherUserFromChat]);
+  
+  }, [showOnlyChats, sortedChats, allUsers, userToChatMap, getOtherUserFromChat, searchTerm, searchResults]);
+    
+  // Start chat for user selection
+  const startChat = useCallback((user) => {
+    if (user?.uid) {
+      dispatch(setSelectedUser(user));
+      setActiveDropdown(null);
+      
+      // Clear search when selecting a user
+      setSearchTerm("");
+    }
+  }, [dispatch]);
 
   // Unified delete chat handler
   const handleDeleteChat = useCallback(async (user, source = 'dropdown') => {
-    
     const chatId = getChatIdForUser(user);
     
     if (!chatId) {
@@ -101,10 +180,9 @@ function Chatlist() {
       return false;
     }
 
-    // Show confirmation toast
     toast(`Delete all chats with ${user?.fullName || 'this user'}?`, {
       description: 'This action cannot be undone. All messages will be permanently deleted.',
-      duration: 3000, // 2 seconds to decide
+      duration: 3000,
       action: {
         label: 'Delete',
         onClick: async () => {
@@ -118,11 +196,15 @@ function Chatlist() {
               dispatch(setMessages([]));
             }
             
+            // Clear search if the deleted user was in search results
+            if (searchTerm.trim()) {
+              setSearchTerm("");
+            }
+            
             toast.success(`Chat with ${user?.fullName || 'user'} deleted successfully!`, {
               duration: 3000,
             });
             
-            // Clean up UI based on source
             if (source === 'dropdown') {
               setActiveDropdown(null);
             } else if (source === 'mobileMenu') {
@@ -132,7 +214,6 @@ function Chatlist() {
             return true;
           
           } catch (error) {
-          
             console.error('Error deleting chat:', error);
             toast.error('Failed to delete chat. Please try again.', { duration: 3000 });
             return false;
@@ -145,7 +226,6 @@ function Chatlist() {
       cancel: {
         label: 'Cancel',
         onClick: () => {
-          // Clean up UI based on source
           if (source === 'dropdown') {
             setActiveDropdown(null);
           } else if (source === 'mobileMenu') {
@@ -156,23 +236,13 @@ function Chatlist() {
     });
     
     return true; 
-
-  }, [dispatch, getChatIdForUser, selectedUser]);
-
-  // Event Handlers
-  const startChat = useCallback((user) => {
-    if (user?.uid) {
-      dispatch(setSelectedUser(user));
-      setActiveDropdown(null);
-    }
-  }, [dispatch]);
+  }, [dispatch, getChatIdForUser, selectedUser, searchTerm]);
 
   const toggleUserDropdown = useCallback((userId, e) => {
     e.stopPropagation();
     setActiveDropdown(prev => prev === userId ? null : userId);
   }, []);
 
-  // Single delete function for all cases
   const handleDeleteUserChat = useCallback((user, e) => {
     e?.stopPropagation();
     setActiveDropdown(null);
@@ -207,9 +277,12 @@ function Chatlist() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobileMenuOpen, activeDropdown]);
 
-  // Render
+  const handleSearchUser = () => {
+    setIsSearchModalOpen(true);
+  }
+
   if (loading && allUsers.length === 0) {
-    return <LoadingScreen mesage="Loading users..."/>;
+    return <LoadingScreen message="Loading users..."/>;
   }
 
   return (
@@ -231,7 +304,9 @@ function Chatlist() {
           showOnlyChats={showOnlyChats}
           usersCount={usersToDisplay.length}
           onToggleFilter={() => setShowOnlyChats(prev => !prev)}
-          onSearch={startChat}
+          onSearch={handleSearch}
+          searchTerm={searchTerm} // Pass current search term to FilterSection
+          isSearching={false}
         />
 
         <UserList 
@@ -242,6 +317,19 @@ function Chatlist() {
           onDeleteUserChat={handleDeleteUserChat}
           onToggleDropdown={toggleUserDropdown}
         />
+
+        <button className="bg-[#01AA85] h-12 w-12 p-2 rounded-xl absolute bottom-16 
+        right-4 flex items-center justify-center shadow-lg cursor-pointer transition-colors text-white"
+        onClick={handleSearchUser}>
+          <RiMessage2Fill size={24}/>
+        </button>
+
+        <SearchModal 
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
+          onSearch={startChat}
+        />
+
     </section>
   );
 }

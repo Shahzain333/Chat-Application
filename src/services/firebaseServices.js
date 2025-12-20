@@ -200,7 +200,6 @@ class FirebaseService {
         return unsubscribe
     }
 
-    // Add to FirebaseService class in firebaseServices.js
     async getAllUsers() {
         try {
 
@@ -291,6 +290,36 @@ class FirebaseService {
             throw error;
         }
     }
+
+    // async searchUsersInTheChatList(searchTerm) {
+    //     try {
+            
+    //         if (!searchTerm.trim()) {
+    //             return [];
+    //         }
+
+    //         const normalizedSearchTerm = searchTerm.toLowerCase();
+    //         const currentUserId = this.getCurrentUserId();
+            
+    //         // Get all users first, then filter client-side
+    //         // This is simpler and works for partial matches in all fields
+    //         const allUsers = await this.getAllUsers();
+            
+    //         // Filter users based on search term
+    //         return allUsers.filter(user => {
+    //             const username = (user.username || '').toLowerCase();
+    //             const fullName = (user.fullName || '').toLowerCase();
+                
+    //             return username.includes(normalizedSearchTerm) ||
+    //                 fullName.includes(normalizedSearchTerm)
+    //         });
+            
+    //     } catch (error) {
+    //         console.error("Error searching users:", error);
+    //         // Fallback to empty array on error
+    //         return [];
+    //     }
+    // }
 
     listenForChats(callback) {
         try {
