@@ -318,7 +318,7 @@ function Chatlist() {
           onToggleDropdown={toggleUserDropdown}
         />
 
-        <button className="bg-[#01AA85] h-12 w-12 p-2 rounded-xl absolute bottom-25 md:bottom-16 
+        <button className="bg-[#01AA85] h-12 w-12 p-2 rounded-xl absolute bottom-18 sm:bottom-28 md:bottom-18 lg:bottom-16 
         right-4 flex items-center justify-center shadow-lg cursor-pointer transition-colors text-white"
         onClick={handleSearchUser}>
           <RiMessage2Fill size={24}/>
