@@ -74,7 +74,7 @@ function Dashboard() {
           {selectedUser ? (
             <ChatBox onBack={handleBackToChats} />
           ) : (
-            <div className='flex items-center justify-center h-full w-full app-background'>
+            <div className='flex items-center justify-center w-full app-background'>
               <div className='text-center p-8'>
                 <h2 className='text-xl font-semibold text-gray-600 mb-2'>Select a conversation</h2>
                 <p className='text-gray-500'>Choose a chat from the list to start messaging</p>

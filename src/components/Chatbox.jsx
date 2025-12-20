@@ -322,7 +322,7 @@ function Chatbox({ onBack }) {
     }
 
     return (
-        <section className='flex flex-col h-screen w-full app-background'>
+        <section className='flex flex-col h-full w-full app-background'>
             
             {/* Header Of ChatBox */}
             <header className='flex justify-between border-b border-gray-400 w-full h-[75px] p-4 
@@ -388,7 +388,7 @@ function Chatbox({ onBack }) {
                 
             </header>
 
-            <main className='flex flex-col flex-1 w-full'>
+            <main className='flex flex-col flex-1 w-full overflow-hidden'>
                 
                 <section className='flex-1 overflow-hidden px-3 pt-5'>
                     
@@ -465,10 +465,11 @@ function Chatbox({ onBack }) {
                             )}
                         </div>
                     </div>
+                    
                 </section>
 
                 {/* Form */}
-                <div className='sticky bottom-[20px] p-3 w-full'>
+                <div className='p-4 w-full bg-white flex-shrink-0'>
                     
                     <form onSubmit={handleMessage} className='flex items-center bg-green-200 
                     h-[55px] w-full px-2 rounded-lg relative shadow-lg'>
