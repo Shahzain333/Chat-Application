@@ -388,7 +388,7 @@ function Chatbox({ onBack }) {
                 
             </header>
 
-            <main className='flex flex-col flex-1 w-full min-h-0'>
+            <main className='flex flex-col flex-1 w-full'>
                 
                 <section className='flex-1 overflow-hidden px-3 pt-5'>
                     

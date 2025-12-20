@@ -28,6 +28,10 @@ import {
     limit
 } from "firebase/firestore"; 
 
+// import {
+
+// } from "firebase/storage";
+
 class FirebaseService {
     constructor() {
         const firebaseConfig = {
@@ -46,7 +50,6 @@ class FirebaseService {
         this.googleProvider = new GoogleAuthProvider();
         this.githubProvider = new GithubAuthProvider();
 
-        // this.initServerRestartDetection()
     } 
      
     async signUp(email, password, username = '') {
@@ -106,39 +109,6 @@ class FirebaseService {
     onAuthStateChange(callback) {
         return onAuthStateChanged(this.auth, callback);
     }
-
-    // async initServerRestartDetection() {
-    //     const serverStatusRef = doc(this.db, 'system', 'serverStatus')
-        
-    //     try {
-
-    //         const serverDoc = await getDoc(serverStatusRef)
-    //         const currentServerTime = Date.now().toString()
-
-    //         if(!serverDoc.exists()){
-    //             await setDoc(serverStatusRef, {
-    //                 startTime: currentServerTime,
-    //                 lastUpdated: serverTimestamp()
-    //             })
-    //         } else {
-             
-    //             const serverData = serverDoc.data()
-    //             const lastServerTime = localStorage.getItem('firebaseServerTime')
-
-    //             if(lastServerTime && lastServerTime !== serverData.startTime){
-    //                 console.log('Firebase server restart detected, logging out user');
-    //                 await this.signOut();
-    //                 localStorage.clear();
-    //                 sessionStorage.clear();
-    //             }
-                
-    //             localStorage.setItem('firebaseServerTime', serverData.startTime)
-            
-    //         }
-    //     } catch (error) {
-    //         console.error('Error in Firebase restart detection:', error);
-    //     }
-    // }
 
     async addUser(userData) {
         try {
@@ -290,36 +260,6 @@ class FirebaseService {
             throw error;
         }
     }
-
-    // async searchUsersInTheChatList(searchTerm) {
-    //     try {
-            
-    //         if (!searchTerm.trim()) {
-    //             return [];
-    //         }
-
-    //         const normalizedSearchTerm = searchTerm.toLowerCase();
-    //         const currentUserId = this.getCurrentUserId();
-            
-    //         // Get all users first, then filter client-side
-    //         // This is simpler and works for partial matches in all fields
-    //         const allUsers = await this.getAllUsers();
-            
-    //         // Filter users based on search term
-    //         return allUsers.filter(user => {
-    //             const username = (user.username || '').toLowerCase();
-    //             const fullName = (user.fullName || '').toLowerCase();
-                
-    //             return username.includes(normalizedSearchTerm) ||
-    //                 fullName.includes(normalizedSearchTerm)
-    //         });
-            
-    //     } catch (error) {
-    //         console.error("Error searching users:", error);
-    //         // Fallback to empty array on error
-    //         return [];
-    //     }
-    // }
 
     listenForChats(callback) {
         try {
